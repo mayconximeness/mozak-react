@@ -1,42 +1,80 @@
 import React, { useState } from "react";
-import Input from "../../components/Input";
-import Button from "../../components/Button";
-import { Link, useNavigate } from "react-router-dom";
+import styled from 'styled-components';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuth from "../../hooks/useAuth";
-import styled from "styled-components";
 
-export const Container = styled.div`
+const Container = styled.div`
   display: flex;
-  align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
   height: 100vh;
+  background-color: #f2f2f2;
 `;
 
-export const Content = styled.div`
-  gap: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+const Wrapper = styled.div`
   width: 100%;
-  box-shadow: 0 1px 2px #0003;
-  background-color: white;
-  max-width: 350px;
-  padding: 20px;
+  max-width: 1200px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+`;
+
+const Logo = styled.div`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 2rem;
+  font-weight: bold;
+`;
+
+const FormSection = styled.div`
+  width: 45%;
+  padding: 40px;
+  background-color: #f2f2f2;
+`;
+
+const FormTitle = styled.h2`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+`;
+
+const FormSubtitle = styled.p`
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 20px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
   border-radius: 5px;
+  font-size: 1rem;
 `;
 
-export const Label = styled.label`
-  font-size: 18px;
-  font-weight: 600;
-  color: #676767;
+const Button = styled.button`
+  width: 100%;
+  padding: 12px;
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #333;
+  }
 `;
 
-export const LabelSignup = styled.label`
-  font-size: 16px;
-  color: #676767;
+const EyeIcon = styled.span`
+  position: absolute;
+  right: 15px;
+  top: 35px;
+  cursor: pointer;
 `;
 
 export const LabelError = styled.label`
@@ -44,21 +82,41 @@ export const LabelError = styled.label`
   color: red;
 `;
 
-export const Strong = styled.strong`
-  cursor: pointer;
+const InputWrapper = styled.div`
+  position: relative;
+`;
+const Navbar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 25px 0;
+  background-color: white;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+`;
 
-  a {
-    text-decoration: none;
-    color: #676767;
+const NavItem = styled.a`
+  margin-left: 20px;
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+
+  &:hover {
+    color: #333;
   }
 `;
 
 const Signin = () => {
-  const { signin } = useAuth();
+  const { signin, signup } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [emailCadastro, setEmailCadastro] = useState("");
+  const [senhaCadastro, setSenhaCadastro] = useState("");
+  const [nome, setNome] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -74,36 +132,88 @@ const Signin = () => {
       return;
     }
 
-    navigate("/home");
+    navigate("/eventos");
+  };
+
+  const handleSignup = async () => {
+    if (!nome || !emailCadastro || !senhaCadastro) {
+      setError("Preencha todos os campos");
+      return;
+    }
+
+    const res = await signup(nome, emailCadastro, senhaCadastro);
+
+    if (res && res !== "Usuário criado com sucesso!") {
+      setError(res); // Se houver um erro, define a mensagem de erro
+    } else {
+      alert("Usuário cadastrado com sucesso!"); // Exibe o alerta em caso de sucesso
+      navigate("/eventos"); // Navega para a próxima página
+    }
   };
 
   return (
-    <Container>
-      <Label>SISTEMA DE LOGIN</Label>
-      <Content>
-        <Input
-          type="email"
-          placeholder="Digite seu E-mail"
-          value={email}
-          onChange={(e) => [setEmail(e.target.value), setError("")]}
-        />
-        <Input
-          type="password"
-          placeholder="Digite sua Senha"
-          value={senha}
-          onChange={(e) => [setSenha(e.target.value), setError("")]}
-        />
-        <LabelError>{error}</LabelError> {/* Corrigido para LabelError */}
-        <Button Text="Entrar" onClick={handleLogin} />
-        <LabelSignup>
-          Não tem uma conta?
-          <Strong>
-            <Link to="/signup">&nbsp;Registre-se</Link>
-          </Strong>
-        </LabelSignup>
-      </Content>
-    </Container>
+    <>
+      <Navbar>
+        <NavItem as={Link} to="/">Criar evento</NavItem>
+        <NavItem as={Link} to="/signin">Entrar</NavItem>
+      </Navbar>
+      <Container>
+
+      <Wrapper>
+        {/* Formulário de Login */}
+        <FormSection>
+          <FormTitle>Entre com sua conta</FormTitle>
+          <FormSubtitle>Entre com sua conta para participar do evento</FormSubtitle>
+          <Input 
+            type="email" 
+            placeholder="Digite seu email" 
+            value={email}
+            onChange={(e) => [setEmail(e.target.value), setError("")]}
+          />
+          <InputWrapper>
+            <Input 
+              type="password" 
+              placeholder="Digite sua senha"
+              value={senha}
+              onChange={(e) => [setSenha(e.target.value), setError("")]}     
+            />
+            <EyeIcon>👁</EyeIcon>
+          <LabelError>{error}</LabelError> {/* Corrigido para LabelError */}
+          </InputWrapper>
+          <Button onClick={handleLogin}>Acessar</Button>
+        </FormSection>
+
+        {/* Formulário de Cadastro */}
+        <FormSection>
+          <FormTitle>Cadastre-se</FormTitle>
+          <FormSubtitle>Cadastre-se para participar ou criar um evento</FormSubtitle>
+          <Input 
+            type="text" 
+            placeholder="Digite seu nome"
+            value={nome}
+            onChange={(e) => [setNome(e.target.value), setError("")]} 
+          />
+          <Input 
+            type="email" 
+            placeholder="Digite seu email" 
+            value={emailCadastro}
+            onChange={(e) => [setEmailCadastro(e.target.value), setError("")]}
+          />
+          <InputWrapper>
+            <Input 
+              type="password" 
+              placeholder="Digite sua senha" 
+              value={senhaCadastro}
+              onChange={(e) => [setSenhaCadastro(e.target.value), setError("")]}
+            />
+            <EyeIcon>👁</EyeIcon>
+          </InputWrapper>
+          <Button onClick={handleSignup} >Criar Conta</Button>
+        </FormSection>
+      </Wrapper>
+      </Container>
+    </>
   );
-};
+}
 
 export default Signin;

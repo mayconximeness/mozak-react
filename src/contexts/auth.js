@@ -5,15 +5,13 @@ export const AuthContext = createContext({});
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // Verifica se o token do usuário está salvo no localStorage
   useEffect(() => {
     const userToken = localStorage.getItem("user_token");
 
     if (userToken) {
       const token = JSON.parse(userToken).token;
 
-      // Validação opcional do token com a API
-      fetch('http://localhost:5000/private', {
+      fetch('http://localhost:8080/api/user', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -21,28 +19,27 @@ export const AuthProvider = ({ children }) => {
       })
       .then(response => {
         if (response.ok) {
-          // Token válido, manter o usuário logado
           setUser({ token });
         } else {
-          // Token inválido, remover do localStorage
           localStorage.removeItem("user_token");
         }
       })
       .catch(() => {
         localStorage.removeItem("user_token");
-      });
+      })
     }
   }, []);
+
 
   // Função para login
   const signin = async (email, senha) => {
     try {
-      const response = await fetch('http://localhost:8800/login', {
+      const response = await fetch('http://localhost:8080/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, senha: senha }),
+        body: JSON.stringify({ email, password: senha }),
       });
 
       const data = await response.json();
@@ -52,7 +49,7 @@ export const AuthProvider = ({ children }) => {
         setUser({ email });
         return;
       } else {
-        return data.message; // Retorna mensagem de erro da API
+        return data.error; // Retorna mensagem de erro da API
       }
     } catch (error) {
       console.error('Erro ao fazer login:', error);
@@ -61,27 +58,28 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Função para cadastro
-  const signup = async (nome, email, password) => {
+  const signup = async (nome, emailCadastro, senhaCadastro) => {
     try {
-      const response = await fetch('http://localhost:8800/usuario', {
+      const response = await fetch('http://localhost:8080/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          nome, // Usando o email como nome, mas pode ser alterado
-          email,
-          senha: password,
-          confirmpassword: password,
+          username: nome, // Usando o email como nome, mas pode ser alterado
+          email: emailCadastro,
+          password: senhaCadastro,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        localStorage.setItem("user_token", JSON.stringify({ token: data.token }));
+        setUser({ email: emailCadastro });
         return "Usuário criado com sucesso!";
       } else {
-        return data.message; // Retorna mensagem de erro da API
+        return data.error; // Retorna mensagem de erro da API
       }
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
